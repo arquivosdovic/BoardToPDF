@@ -1,16 +1,21 @@
 const { jsPDF } = window.jspdf;
-let blocks = [];
+
+// Inicializa o Drag and Drop na área do editor
+const el = document.getElementById('editor-area');
+const sortable = Sortable.create(el, {
+    animation: 150,
+    ghostClass: 'sortable-ghost'
+});
 
 function addTextBlock() {
     const id = Date.now();
     const html = `
-        <div class="block" id="block-${id}">
-            <button class="remove-btn" onclick="removeBlock(${id})">×</button>
-            <textarea placeholder="Digite o título ou anotação..." oninput="updateText(${id}, this.value)"></textarea>
+        <div class="block" data-type="text" id="block-${id}">
+            <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
+            <textarea placeholder="Digite o título ou anotação..."></textarea>
         </div>
     `;
     document.getElementById('editor-area').insertAdjacentHTML('beforeend', html);
-    blocks.push({ id, type: 'text', content: '' });
 }
 
 function handleImages(input) {
@@ -19,68 +24,54 @@ function handleImages(input) {
         reader.onload = function(e) {
             const id = Date.now() + Math.random();
             const html = `
-                <div class="block" id="block-${id}">
-                    <button class="remove-btn" onclick="removeBlock(${id})">×</button>
+                <div class="block" data-type="image" id="block-${id}">
+                    <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
                     <img src="${e.target.result}">
                 </div>
             `;
             document.getElementById('editor-area').insertAdjacentHTML('beforeend', html);
-            blocks.push({ id, type: 'image', content: e.target.result });
         };
         reader.readAsDataURL(file);
     });
 }
 
-function updateText(id, value) {
-    const block = blocks.find(b => b.id === id);
-    if (block) block.content = value;
-}
-
-function removeBlock(id) {
-    blocks = blocks.filter(b => b.id !== id);
-    document.getElementById(`block-${id}`).remove();
-}
-
 async function generatePDF() {
     const doc = new jsPDF();
+    // Captura os elementos na ordem exata em que estão na tela agora
+    const htmlBlocks = document.querySelectorAll('.block');
+    
     let firstPage = true;
 
-    for (const block of blocks) {
+    for (const blockEl of htmlBlocks) {
         if (!firstPage) doc.addPage();
         
+        const type = blockEl.getAttribute('data-type');
         const pdfWidth = doc.internal.pageSize.getWidth();
 
-        if (block.type === 'text') {
-            // Configurações do texto
+        if (type === 'text') {
+            const content = blockEl.querySelector('textarea').value;
             const fontSize = 18;
             doc.setFontSize(fontSize);
             const margin = 15;
             const textWidth = pdfWidth - (margin * 2);
             
-            // Quebra o texto para saber quantas linhas ele terá
-            const splitText = doc.splitTextToSize(block.content, textWidth);
+            const splitText = doc.splitTextToSize(content, textWidth);
             const lineCount = splitText.length;
-            
-            // Calcula a altura mínima necessária (tamanho da fonte + margens)
-            // Multiplicamos por 0.5 (aprox) para converter de pontos para mm
             const textHeightInMm = (lineCount * (fontSize * 0.5)) + (margin * 2);
             
-            // Ajusta a página para o tamanho do texto
             doc.setPage(doc.internal.getNumberOfPages());
             doc.internal.pageSize.height = textHeightInMm;
-            
-            // Adiciona o texto na página "encolhida"
             doc.text(splitText, margin, margin + (fontSize * 0.4));
             
         } else {
-            // Página de imagem: Ajusta a página ao tamanho da imagem
-            const img = await getImageProps(block.content);
+            const imgSrc = blockEl.querySelector('img').src;
+            const img = await getImageProps(imgSrc);
             const ratio = pdfWidth / img.width;
             const pdfHeight = img.height * ratio;
 
             doc.setPage(doc.internal.getNumberOfPages());
             doc.internal.pageSize.height = pdfHeight;
-            doc.addImage(block.content, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            doc.addImage(imgSrc, 'JPEG', 0, 0, pdfWidth, pdfHeight);
         }
         firstPage = false;
     }

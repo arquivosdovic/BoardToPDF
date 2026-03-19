@@ -85,3 +85,16 @@ button {
 }
 
 button:hover { opacity: 0.8; }
+
+.sortable-ghost {
+    opacity: 0.4;
+    border: 2px dashed #0984e3;
+}
+
+.block {
+    cursor: grab; /* Indica que é arrastável */
+}
+
+.block:active {
+    cursor: grabbing;
+}
