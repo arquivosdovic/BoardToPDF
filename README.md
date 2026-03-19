@@ -13,7 +13,7 @@ Diferente de editores de texto tradicionais (como o Word), o **BoardToPDF** foi 
 
 ## 🚀 Como usar
 
-1. Aceda à aplicação via [Seu Link do Netlify Aqui].
+1. Aceda à aplicação via [https://boardtopdf.netlify.app/].
 2. Clique em **+ Texto** para adicionar títulos ou observações.
 3. Clique em **+ Imagem** para carregar as fotos da lousa.
 4. Reordene ou remova blocos conforme necessário.
