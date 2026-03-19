@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de PDF Acadêmico</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Montador de PDF de Aula</h1>
+        <p class="subtitle">Adicione blocos de texto ou fotos de lousa.</p>
+
+        <div id="editor-area">
+            </div>
+
+        <div class="controls">
+            <button onclick="addTextBlock()" class="btn-secondary">+ Texto</button>
+            <button onclick="document.getElementById('file-input').click()" class="btn-secondary">+ Imagem</button>
+            <input type="file" id="file-input" multiple accept="image/*" style="display: none;" onchange="handleImages(this)">
+        </div>
+
+        <button id="generate-btn" onclick="generatePDF()" class="btn-primary">Gerar PDF Final</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

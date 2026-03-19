@@ -1,0 +1,87 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f4f7f6;
+    color: #333;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
+
+h1 { font-size: 1.5rem; margin-bottom: 5px; color: #2c3e50; }
+.subtitle { font-size: 0.9rem; color: #7f8c8d; margin-bottom: 20px; }
+
+.block {
+    border: 1px solid #eee;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    position: relative;
+    background: #fafafa;
+}
+
+.block textarea {
+    width: 100%;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 8px;
+    resize: vertical;
+}
+
+.block img {
+    max-width: 100%;
+    border-radius: 4px;
+    display: block;
+    margin-top: 10px;
+}
+
+.remove-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #ff7675;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    cursor: pointer;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 15px;
+    transition: 0.2s;
+}
+
+.btn-primary {
+    background: #0984e3;
+    color: white;
+    width: 100%;
+    margin-top: 20px;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+.btn-secondary {
+    background: #dfe6e9;
+    color: #2d3436;
+    flex: 1;
+}
+
+button:hover { opacity: 0.8; }
