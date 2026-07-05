@@ -42,6 +42,14 @@ h1 { font-size: 1.5rem; margin-bottom: 5px; color: #2c3e50; }
     margin-top: 10px;
 }
 
+.file-name {
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    margin-top: 6px;
+    text-align: center;
+    word-break: break-all;
+}
+
 .remove-btn {
     position: absolute;
     top: 5px;

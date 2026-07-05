@@ -19,20 +19,41 @@ function addTextBlock() {
 }
 
 function handleImages(input) {
-    Array.from(input.files).forEach(file => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const id = Date.now() + Math.random();
+    // Pega os arquivos na ordem em que foram selecionados
+    const files = Array.from(input.files);
+
+    // Lê cada arquivo como uma Promise, para poder aguardar todos
+    // e depois inserir no DOM respeitando a ordem original de seleção
+    const readFileAsDataURL = (file) => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve({ name: file.name, dataUrl: e.target.result });
+            reader.readAsDataURL(file);
+        });
+    };
+
+    Promise.all(files.map(readFileAsDataURL)).then((results) => {
+        const editorArea = document.getElementById('editor-area');
+        results.forEach((result, index) => {
+            const id = Date.now() + index;
             const html = `
                 <div class="block" data-type="image" id="block-${id}">
                     <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
-                    <img src="${e.target.result}">
+                    <img src="${result.dataUrl}">
+                    <div class="file-name">${escapeHtml(result.name)}</div>
                 </div>
             `;
-            document.getElementById('editor-area').insertAdjacentHTML('beforeend', html);
-        };
-        reader.readAsDataURL(file);
+            editorArea.insertAdjacentHTML('beforeend', html);
+        });
+        // Limpa o input para permitir selecionar os mesmos arquivos novamente se precisar
+        input.value = '';
     });
+}
+
+function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }
 
 async function generatePDF() {
