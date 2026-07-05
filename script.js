@@ -133,9 +133,38 @@ async function generatePDF() {
             const ratio = pdfWidth / normalized.width;
             const pdfHeight = normalized.height * ratio;
 
+            // Legenda opcional com o nome do arquivo, controlada pelo checkbox
+            const includeCaption = document.getElementById('caption-toggle').checked;
+            const fileNameEl = blockEl.querySelector('.file-name');
+            const fileName = fileNameEl ? fileNameEl.textContent : '';
+
+            const captionFontSize = 9;
+            const captionMarginTop = 4; // espaço entre a imagem e a legenda (mm)
+            const captionMarginBottom = 4; // respiro depois da legenda (mm)
+            const captionSideMargin = 15; // mm de margem nas laterais do texto
+
+            let captionLines = [];
+            if (includeCaption && fileName) {
+                doc.setFontSize(captionFontSize);
+                captionLines = doc.splitTextToSize(fileName, pdfWidth - (captionSideMargin * 2));
+            }
+
+            const captionHeight = captionLines.length
+                ? captionMarginTop + (captionLines.length * captionFontSize * 0.5) + captionMarginBottom
+                : 0;
+
+            const totalHeight = pdfHeight + captionHeight;
+
             doc.setPage(doc.internal.getNumberOfPages());
-            doc.internal.pageSize.height = pdfHeight;
+            doc.internal.pageSize.height = totalHeight;
             doc.addImage(normalized.dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+            if (captionLines.length) {
+                doc.setFontSize(captionFontSize);
+                doc.setTextColor(120);
+                doc.text(captionLines, pdfWidth / 2, pdfHeight + captionMarginTop + (captionFontSize * 0.4), { align: 'center' });
+                doc.setTextColor(0);
+            }
         }
         firstPage = false;
     }
