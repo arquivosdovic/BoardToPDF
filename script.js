@@ -7,15 +7,45 @@ const sortable = Sortable.create(el, {
     ghostClass: 'sortable-ghost'
 });
 
-function addTextBlock() {
+// Guarda o id do bloco após o qual a próxima imagem selecionada deve ser inserida.
+// Fica null quando a inserção deve ir para o final (comportamento padrão).
+let pendingInsertAfterId = null;
+
+// HTML dos botõezinhos "+ Texto" / "+ Imagem" que ficam dentro de cada bloco,
+// permitindo inserir conteúdo novo logo depois daquele bloco específico.
+function insertControlsHTML(blockId) {
+    return `
+        <div class="insert-controls">
+            <button class="insert-btn" onclick="insertTextAfter('${blockId}')" title="Inserir texto logo abaixo deste bloco">+ Texto abaixo</button>
+            <button class="insert-btn" onclick="insertImageAfter('${blockId}')" title="Inserir imagem logo abaixo deste bloco">+ Imagem abaixo</button>
+        </div>
+    `;
+}
+
+function insertTextAfter(blockId) {
+    const anchor = document.getElementById(blockId);
+    addTextBlock(anchor);
+}
+
+function insertImageAfter(blockId) {
+    pendingInsertAfterId = blockId;
+    document.getElementById('file-input').click();
+}
+
+function addTextBlock(afterElement = null) {
     const id = Date.now();
     const html = `
         <div class="block" data-type="text" id="block-${id}">
             <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
             <textarea placeholder="Digite o título ou anotação..."></textarea>
+            ${insertControlsHTML(`block-${id}`)}
         </div>
     `;
-    document.getElementById('editor-area').insertAdjacentHTML('beforeend', html);
+    if (afterElement) {
+        afterElement.insertAdjacentHTML('afterend', html);
+    } else {
+        document.getElementById('editor-area').insertAdjacentHTML('beforeend', html);
+    }
 }
 
 function handleImages(input) {
@@ -34,6 +64,10 @@ function handleImages(input) {
 
     Promise.all(files.map(readFileAsDataURL)).then((results) => {
         const editorArea = document.getElementById('editor-area');
+        // Se veio de um botão "+ Imagem abaixo", ancora a inserção naquele bloco;
+        // senão, cai no comportamento padrão de adicionar no final.
+        let anchor = pendingInsertAfterId ? document.getElementById(pendingInsertAfterId) : null;
+
         results.forEach((result, index) => {
             const id = Date.now() + index;
             const html = `
@@ -41,10 +75,18 @@ function handleImages(input) {
                     <button class="remove-btn" onclick="this.parentElement.remove()">×</button>
                     <img src="${result.dataUrl}">
                     <div class="file-name">${escapeHtml(result.name)}</div>
+                    ${insertControlsHTML(`block-${id}`)}
                 </div>
             `;
-            editorArea.insertAdjacentHTML('beforeend', html);
+            if (anchor) {
+                anchor.insertAdjacentHTML('afterend', html);
+                anchor = document.getElementById(`block-${id}`); // avança a âncora para manter a ordem
+            } else {
+                editorArea.insertAdjacentHTML('beforeend', html);
+            }
         });
+
+        pendingInsertAfterId = null;
         // Limpa o input para permitir selecionar os mesmos arquivos novamente se precisar
         input.value = '';
     });
@@ -86,13 +128,14 @@ async function generatePDF() {
             
         } else {
             const imgSrc = blockEl.querySelector('img').src;
-            const img = await getImageProps(imgSrc);
-            const ratio = pdfWidth / img.width;
-            const pdfHeight = img.height * ratio;
+            // Normaliza a imagem (corrige rotação EXIF) antes de calcular dimensões e inserir no PDF
+            const normalized = await normalizeImage(imgSrc);
+            const ratio = pdfWidth / normalized.width;
+            const pdfHeight = normalized.height * ratio;
 
             doc.setPage(doc.internal.getNumberOfPages());
             doc.internal.pageSize.height = pdfHeight;
-            doc.addImage(imgSrc, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+            doc.addImage(normalized.dataUrl, 'JPEG', 0, 0, pdfWidth, pdfHeight);
         }
         firstPage = false;
     }
@@ -100,10 +143,25 @@ async function generatePDF() {
     doc.save(`Aula_Organizada_${new Date().toLocaleDateString()}.pdf`);
 }
 
-function getImageProps(src) {
-    return new Promise(resolve => {
-        const i = new Image();
-        i.onload = () => resolve({ width: i.width, height: i.height });
-        i.src = src;
+// Fotos de celular costumam vir com uma tag EXIF de orientação (ex: "girar 90°"),
+// que o navegador respeita ao exibir a <img>, mas que o jsPDF ignora ao montar o PDF.
+// Por isso, desenhamos a imagem num <canvas> (que já aplica a rotação correta) e
+// exportamos um novo dataURL "gravado" na orientação certa, sem depender de EXIF.
+function normalizeImage(src) {
+    return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0);
+            resolve({
+                dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+                width: img.width,
+                height: img.height
+            });
+        };
+        img.src = src;
     });
 }

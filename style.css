@@ -50,6 +50,29 @@ h1 { font-size: 1.5rem; margin-bottom: 5px; color: #2c3e50; }
     word-break: break-all;
 }
 
+.insert-controls {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    justify-content: center;
+}
+
+.insert-btn {
+    background: transparent;
+    border: 1px dashed #b2bec3;
+    color: #636e72;
+    font-size: 0.75rem;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.insert-btn:hover {
+    background: #eef6ff;
+    border-color: #0984e3;
+    color: #0984e3;
+    opacity: 1;
+}
+
 .remove-btn {
     position: absolute;
     top: 5px;
