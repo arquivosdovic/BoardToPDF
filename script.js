@@ -98,6 +98,39 @@ function escapeHtml(str) {
     return div.innerHTML;
 }
 
+// --- Botões flutuantes de rolagem (ir para o início / ir para o fim) ---
+
+function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function scrollToBottom() {
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+function updateScrollNavVisibility() {
+    const topBtn = document.getElementById('scroll-top-btn');
+    const bottomBtn = document.getElementById('scroll-bottom-btn');
+    if (!topBtn || !bottomBtn) return;
+
+    const scrollY = window.scrollY;
+    const maxScroll = document.body.scrollHeight - window.innerHeight;
+    const threshold = 40; // margem em px para considerar "já no topo/fim"
+
+    // Só mostra os botões se houver de fato conteúdo suficiente para rolar
+    const canScroll = maxScroll > threshold;
+
+    topBtn.classList.toggle('visible', canScroll && scrollY > threshold);
+    bottomBtn.classList.toggle('visible', canScroll && scrollY < maxScroll - threshold);
+}
+
+window.addEventListener('scroll', updateScrollNavVisibility);
+window.addEventListener('resize', updateScrollNavVisibility);
+document.addEventListener('DOMContentLoaded', updateScrollNavVisibility);
+// Reavalia a visibilidade sempre que blocos são adicionados/removidos, já que isso muda a altura da página
+const scrollNavObserver = new MutationObserver(updateScrollNavVisibility);
+scrollNavObserver.observe(document.body, { childList: true, subtree: true });
+
 async function generatePDF() {
     const doc = new jsPDF();
     // Captura os elementos na ordem exata em que estão na tela agora
